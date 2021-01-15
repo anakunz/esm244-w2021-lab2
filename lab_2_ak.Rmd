@@ -1,0 +1,53 @@
+---
+title: "Week2 Lab"
+author: "Anastasia Kunz"
+date: "1/15/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(here)
+library(palmerpenguins)
+library(ggfortify)
+library(readxl)
+library(lubridate)
+library(plotly)
+library(gghighlight)
+library(patchwork)
+
+
+```
+
+## Part 1: PCA with penguins
+
+```{r}
+penguin_pca <- penguins %>% 
+  select(body_mass_g, ends_with("_mm")) %>% 
+  drop_na() %>%  #this drops all rows with an NA anywhere, if you put the var inbetween the () drops for that var  
+  scale() %>% # now the values are scaled to the same units 
+  prcomp() # now this is a list containing diff info; not a data frame anymore
+
+penguin_pca$rotation
+# this shows the loading for the weights of the different variables (biplot similar)
+
+#make a biplot - using autoplot; it assumes the type of plot you want to make (need ggfortify for this)
+
+penguin_complete <- penguins %>% 
+  drop_na(body_mass_g, ends_with("_mm"))
+
+autoplot(penguin_pca,
+         data = penguin_complete, 
+         colour = "species",
+         loadings = TRUE,
+         loadings.label = TRUE) +
+  theme_minimal()
+
+
+```
+
+## Part 2: 
+
+
