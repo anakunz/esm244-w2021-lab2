@@ -48,6 +48,84 @@ autoplot(penguin_pca,
 
 ```
 
-## Part 2: 
+## Part 2: ggplot customization and read in diff file types
+
+#### read in an .xlsx file and do some wrangling
+
+```{r}
+fish_noaa <- read_excel(here("data", "foss_landings.xlsx")) %>% 
+  clean_names() %>% 
+  mutate(across(where(is.character), tolower)) %>% 
+  mutate(nmfs_name = str_sub(nmfs_name, end = -4)) %>%  #same name as existing column replaces it
+  filter(confidentiality == "public")
+```
+
+
+Make a customized graph
+
+```{r}
+fish_plot <- ggplot(fish_noaa, aes(x = year, y = pounds))+
+  geom_line(aes(color = nmfs_name), show.legend = FALSE)+
+  theme_minimal()
+
+fish_plot
+
+ggplotly(fish_plot)
+
+# use gghighilight to highlight certain series
+
+ggplot(fish_noaa, aes(x = year, y = pounds, group = nmfs_name))+
+  geom_line(aes(color = nmfs_name ))+
+  theme_minimal()+
+  gghighlight(max(pounds) > 1e8)
+```
+
+#### Read in data from a url use the `lubridate` package, use `mutate`, make a graph with months in logical order
+
+
+```{r}
+monroe_wt <- read_csv("https://data.bloomington.in.gov/dataset/2c81cfe3-62c2-46ed-8fcf-83c1880301d1/resource/13c8f7aa-af51-4008-80a9-56415c7c931e/download/mwtpdailyelectricitybclear.csv") %>% 
+  clean_names()
+```
+
+```{r}
+monroe_ts <- monroe_wt %>% 
+  mutate(date = mdy(date)) %>% 
+  mutate(record_month = month(date)) %>% 
+  mutate(month_name = month.abb[record_month]) %>% 
+  mutate(month_name = fct_reorder(month_name, record_month))
+
+ggplot(data = monroe_ts, aes(x = month_name, y = total_k_wh))+
+         geom_jitter()
+```
+
+
+## Part 3: Compound figures with `patchwork`; multiple figures in one with a layout you choose
+
+
+```{r}
+graph_a <- ggplot(penguins, aes(x = body_mass_g, y = flipper_length_mm))+
+  geom_point()
+
+graph_b <- ggplot(penguins, aes(x = species, y = flipper_length_mm))+
+  geom_jitter(aes(color = species), show.legend = FALSE)
+
+#use | to put graphs side by side 
+#use / to put graphs one on top of the other
+
+graph_c <- (graph_a|graph_b)/fish_plot & theme_dark()
+
+graph_c
+
+ggsave(here("fig", "graph_c_ah.png"), width = 5, height = 6)
+```
+
+
+
+
+
+
+
+
 
 
